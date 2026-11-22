@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Скорлупа — запечатанный дроп · концепт для BigBalls</title>
+<meta name="description" content="Неофициальный концепт механики «Скорлупа» для BigBalls: общий запечатанный дроп с проверяемой честностью.">
+<style>
+  :root{--navy:#151c2c;--navy2:#1b2438;--orange:#f0742a;--green:#2e7d5a;--gold:#e8b33a;--text:#fff;--muted:#c4cad8}
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--navy);color:var(--text);
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif;line-height:1.5}
+  main{max-width:880px;margin:0 auto;padding:40px 16px 56px}
+  .tag{display:inline-block;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;
+    background:var(--orange);color:#fff;border-radius:999px;padding:4px 14px}
+  h1{font-size:clamp(32px,7vw,56px);line-height:1.1;margin:16px 0 12px;font-weight:900}
+  h1 span{color:var(--orange)}
+  .lead{font-size:clamp(17px,2.6vw,20px);color:var(--muted);margin:0 0 8px}
+  .lead b{color:var(--gold);font-weight:700}
+  .grid{display:grid;grid-template-columns:minmax(0,360px) minmax(0,1fr);gap:32px;align-items:center;margin-top:32px}
+  video{width:100%;aspect-ratio:9/16;background:#000;border-radius:20px;border:3px solid var(--gold);display:block}
+  ol{margin:0;padding-left:22px;color:var(--muted)}
+  ol li{margin-bottom:10px}
+  ol b{color:#fff}
+  .btn{display:inline-block;margin-top:20px;padding:16px 30px;border-radius:999px;font-weight:800;font-size:19px;
+    color:#fff;text-decoration:none;background:var(--orange);border:3px solid #0c111c;box-shadow:0 6px 0 #7a3410}
+  .btn:hover{filter:brightness(1.08)}
+  .btn:active{transform:translateY(3px);box-shadow:0 3px 0 #7a3410}
+  .note{margin-top:40px;padding:16px 18px;border-radius:16px;background:var(--navy2);border:1px solid #2c3956;color:var(--muted);font-size:14px}
+  .note p{margin:4px 0}
+  @media (max-width:700px){
+    main{padding-top:28px}
+    .grid{grid-template-columns:1fr;gap:24px}
+    video{max-width:360px;margin:0 auto}
+    .cta{text-align:center}
+  }
+</style>
+</head>
+<body>
+<main>
+  <span class="tag">Концепт · демо</span>
+  <h1>Скорлупа — <span>запечатанный дроп</span></h1>
+  <p class="lead">Одна общая скорлупа с призом внутри: все участники греют её вместе, идёт обратный отсчёт, на нуле скорлупа трескается и раскрывает приз и победителя.</p>
+  <p class="lead"><b>Честность можно проверить:</b> хэш SHA-256 приза и секретного ключа публикуется до старта таймера, поэтому подменить приз или победителя после нельзя.</p>
+
+  <div class="grid">
+    <video src="out/shell_demo.mp4" poster="assets/01.jpg" controls playsinline preload="metadata"></video>
+    <div class="cta">
+      <ol>
+        <li><b>Запечатывание.</b> Хэш «приз + ключ» появляется на скорлупе до старта.</li>
+        <li><b>«Греть» = участвовать.</b> Один человек — одно участие, у каждого свой номер.</li>
+        <li><b>Разлом.</b> На нуле — вспышка, треск, приз и победитель.</li>
+        <li><b>Проверка.</b> Ключ открыт, хэш пересчитывается в браузере — зелёная галочка.</li>
+      </ol>
+      <a class="btn" href="shell.html">Открыть интерактивный демо</a>
+    </div>
+  </div>
+
+  <div class="note">
+    <p>Неофициальный концепт для BigBalls.</p>
+    <p>Картинки созданы ИИ.</p>
+    <p>Демо: призы и победитель — заглушки.</p>
+  </div>
+</main>
+</body>
+</html>

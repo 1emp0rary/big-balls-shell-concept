@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>BigBalls — Скорлупа (демо-прототип)</title>
+<style>
+  :root{--navy:#151c2c;--navy2:#1b2438;--orange:#f0742a;--green:#2e7d5a;--gold:#e8b33a;--mint:#7fe0b0;--muted:#c4cad8}
+  html,body{margin:0;height:100%;background:#0b0f18;overflow:hidden;
+    font-family:"Segoe UI",system-ui,-apple-system,Roboto,Arial,sans-serif}
+  #stage{position:absolute;left:50%;top:50%;width:1080px;height:1920px;overflow:hidden;background:var(--navy);transform-origin:center}
+  #scene{position:absolute;inset:0;transform-origin:540px 990px}
+  #scene.ease{transition:transform 1.6s cubic-bezier(.2,.7,.2,1)}
+  .layer{position:absolute;inset:0;width:1080px;height:1920px;object-fit:cover;opacity:0;transition:opacity .7s ease}
+  .layer.on{opacity:1}
+  .layer.fast{transition:opacity .12s linear}
+  #fx{position:absolute;inset:0;pointer-events:none}
+  #flash{position:absolute;inset:0;background:radial-gradient(circle at 540px 990px,#fff 0,#fff6d8 35%,#ffd27a 70%,rgba(255,200,100,.6));opacity:0;pointer-events:none}
+  #vign{position:absolute;inset:0;pointer-events:none;
+    background:linear-gradient(rgba(21,28,44,.75),rgba(21,28,44,0) 20%,rgba(21,28,44,0) 72%,rgba(21,28,44,.55))}
+
+  .ui{position:absolute;left:190px;width:700px;text-align:center;color:#fff;
+    -webkit-text-stroke:8px var(--navy);paint-order:stroke fill;transition:opacity .5s, transform .5s}
+  .hide{opacity:0 !important;pointer-events:none !important}
+  .mono{font-family:Consolas,"Cascadia Mono",ui-monospace,monospace}
+  #brand{top:150px;font-size:76px;font-weight:900;letter-spacing:1px;line-height:1}
+  #brand b{color:var(--orange)}
+  #sub{top:244px;font-size:30px;font-weight:600;-webkit-text-stroke-width:6px}
+  #badge{top:300px;left:390px;width:300px;font-size:22px;font-weight:800;letter-spacing:3px;line-height:40px;
+    -webkit-text-stroke:0;background:var(--orange);border:3px solid var(--navy);border-radius:22px;box-sizing:border-box}
+  #timer{top:585px;font-size:124px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums;-webkit-text-stroke-width:12px}
+  #timer.hot{color:#ffd9b8}
+  #heaters{top:728px;font-size:44px;font-weight:800;-webkit-text-stroke-width:9px}
+  #heaters span{color:var(--gold)}
+
+  /* компактная плашка «Приз запечатан · Проверить» */
+  #seal{top:1150px;left:250px;width:580px;height:94px;padding:0;cursor:pointer;-webkit-text-stroke:0;
+    background:rgba(21,28,44,.88);border:3px solid var(--gold);border-radius:47px;box-sizing:border-box;font-family:inherit;color:#fff}
+  #seal .l1{font-size:30px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;line-height:36px}
+  #seal .l1 u{color:var(--gold);text-underline-offset:5px}
+  #seal .l2{font-size:22px;color:var(--muted);margin-top:2px}
+  #seal:hover{box-shadow:0 0 24px rgba(232,179,58,.5)}
+  #hint{top:1378px;font-size:26px;font-weight:700;-webkit-text-stroke-width:6px}
+  #hint.ok{color:var(--mint)}
+
+  /* раскрытие */
+  #gem{position:absolute;left:465px;top:775px;width:150px;height:130px;transform:scale(0);transition:transform .7s cubic-bezier(.2,1.6,.4,1);
+    filter:drop-shadow(0 0 22px rgba(232,179,58,.9))}
+  #gem.show{transform:scale(1)}
+  #pname{top:1028px;font-size:54px;font-weight:900;color:var(--gold);-webkit-text-stroke-width:10px}
+  #wincard{top:1110px;left:240px;width:600px;height:122px;box-sizing:border-box;padding-top:12px;-webkit-text-stroke:0;
+    background:rgba(21,28,44,.92);border:3px solid var(--gold);border-radius:28px}
+  #wincard .k{font-size:20px;font-weight:700;letter-spacing:2px;color:var(--gold)}
+  #wincard .v{font-size:40px;font-weight:900;margin-top:6px}
+  #wincard .v span{color:var(--orange)}
+  #fair{top:1259px;left:330px;width:420px;height:72px;padding:0;cursor:pointer;font:700 30px "Segoe UI",system-ui,sans-serif;color:#fff;
+    -webkit-text-stroke:0;background:var(--green);border:3px solid var(--navy);border-radius:36px;box-shadow:0 0 24px rgba(46,125,90,.6);
+    transform:scale(.3)}
+  #fair:not(.hide){transform:scale(1);transition:opacity .3s, transform .45s cubic-bezier(.2,1.6,.4,1)}
+  #fair i{font-style:normal;margin-right:8px}
+
+  #btn{top:1440px;left:300px;width:480px;height:108px;border:4px solid var(--navy);border-radius:54px;cursor:pointer;
+    font:900 50px/1 "Segoe UI",system-ui,sans-serif;color:#fff;-webkit-text-stroke:7px var(--navy);paint-order:stroke fill;
+    background:linear-gradient(180deg,#ff9550,var(--orange) 55%,#c9561a);box-shadow:0 8px 0 #7a3410,0 0 40px rgba(240,116,42,.55)}
+  #btn:active{transform:translateY(5px);box-shadow:0 3px 0 #7a3410,0 0 60px rgba(240,116,42,.8)}
+  #btn.joined{left:280px;width:520px;cursor:default;background:rgba(21,28,44,.92);border-color:var(--gold);box-shadow:0 0 30px rgba(232,179,58,.35);
+    font-size:40px;-webkit-text-stroke:0}
+  #btn.joined:active{transform:none}
+  #btn.joined i{font-style:normal;color:var(--mint);margin-right:10px}
+  #btn.green{background:linear-gradient(180deg,#43a57a,var(--green) 55%,#1e5a40);box-shadow:0 8px 0 #123827,0 0 40px rgba(46,125,90,.6)}
+  #plus{position:absolute;pointer-events:none;color:var(--gold);font:900 40px "Segoe UI",sans-serif;-webkit-text-stroke:6px var(--navy);paint-order:stroke fill}
+
+  /* окно «Проверка честности» */
+  #modal{position:absolute;inset:0;background:rgba(21,28,44,.75);opacity:0;pointer-events:none;transition:opacity .3s}
+  #modal.open{opacity:1;pointer-events:auto}
+  #card{position:absolute;left:190px;top:520px;width:700px;height:880px;box-sizing:border-box;padding:26px 32px;color:#fff;
+    background:#1b2438;border:3px solid var(--gold);border-radius:30px;transform:translateY(50px);transition:transform .3s ease-out}
+  #modal.open #card{transform:none}
+  #card h2{margin:0;font-size:40px;font-weight:900;text-align:center}
+  #card .ex{font-size:24px;line-height:30px;color:#d2d8e4;text-align:center;margin:10px 0 18px}
+  #card .k{font-size:20px;font-weight:700;letter-spacing:1.5px;color:var(--gold);margin-top:14px}
+  #card .v{font-size:24px;line-height:30px;word-break:break-all}
+  #card .muted{color:#9aa3b8;font-size:24px;line-height:30px}
+  #copy{margin-left:12px;font:600 18px "Segoe UI",sans-serif;color:var(--gold);background:none;border:2px solid var(--gold);border-radius:14px;padding:2px 12px;cursor:pointer;vertical-align:middle}
+  #mCheck{display:flex;align-items:center;gap:14px;margin-top:14px;font-size:28px;font-weight:700;color:var(--mint)}
+  #mCheck svg{flex:none}
+  #mCheck circle{fill:var(--green);transform-origin:center;transform:scale(0);transition:transform .4s cubic-bezier(.2,1.6,.4,1)}
+  #mCheck path{stroke-dasharray:1;stroke-dashoffset:1;transition:stroke-dashoffset .35s ease .3s}
+  #mCheck.show circle{transform:scale(1)} #mCheck.show path{stroke-dashoffset:0}
+  #mCheck.bad{color:#ff7a7a} #mCheck.bad circle{fill:#a33}
+  #list{display:inline-block;margin-top:16px;font-size:24px;color:var(--orange);cursor:default}
+  #close{position:absolute;left:200px;bottom:30px;width:300px;height:76px;border-radius:38px;cursor:pointer;
+    font:700 30px "Segoe UI",sans-serif;color:#fff;background:#28344e;border:3px solid var(--gold)}
+
+  #startov{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(21,28,44,.35);cursor:pointer}
+  #startov div{margin-top:-40px;padding:28px 56px;border-radius:60px;background:var(--orange);border:4px solid var(--navy);color:#fff;
+    font:900 52px "Segoe UI",sans-serif;-webkit-text-stroke:7px var(--navy);paint-order:stroke fill;box-shadow:0 0 50px rgba(240,116,42,.6)}
+  #err{top:1340px;color:#ff8a8a;font-size:26px}
+  #guides{position:absolute;inset:0;pointer-events:none;display:none}
+  #guides.on{display:block}
+  #guides i{position:absolute;border:0 dashed #0ff}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="scene">
+    <img class="layer" data-i="1" src="assets/01.jpg" alt="">
+    <img class="layer" data-i="2" src="assets/02.jpg" alt="">
+    <img class="layer" data-i="3" src="assets/03.jpg" alt="">
+    <img class="layer" data-i="4" src="assets/04.jpg" alt="">
+    <img class="layer" data-i="5" src="assets/05.jpg" alt="">
+    <img class="layer on" data-i="6" src="assets/06.jpg" alt="">
+  </div>
+  <canvas id="fx" width="1080" height="1920"></canvas>
+  <div id="vign"></div>
+  <div id="flash"></div>
+
+  <div id="brand" class="ui">Big<b>Balls</b></div>
+  <div id="sub" class="ui">Скорлупа · общий запечатанный дроп</div>
+
+  <div id="timer" class="ui">00:10</div>
+  <div id="heaters" class="ui">Греют: <span id="hn">0</span></div>
+  <button id="seal" class="ui">
+    <div class="l1"><svg width="22" height="30" viewBox="0 0 22 30"><path d="M5 13V9a6 6 0 0 1 12 0v4" fill="none" stroke="#e8b33a" stroke-width="4"/><rect x="0" y="12" width="22" height="18" rx="4" fill="#e8b33a"/></svg>
+      <span>Приз запечатан · <u>Проверить</u></span></div>
+    <div class="l2 mono" id="shortHash">SHA-256: …</div>
+  </button>
+
+  <svg id="gem" viewBox="0 0 150 130">
+    <defs><linearGradient id="g1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff3c4"/><stop offset="1" stop-color="#e8b33a"/></linearGradient>
+      <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb37a"/><stop offset="1" stop-color="#b8461a"/></linearGradient></defs>
+    <polygon points="28,8 122,8 146,44 75,126 4,44" fill="url(#g2)" stroke="#151c2c" stroke-width="5"/>
+    <polygon points="28,8 52,44 75,8" fill="#ffd2a8" opacity=".7"/><polygon points="75,8 98,44 122,8" fill="#ff9a5c" opacity=".7"/>
+    <polyline points="4,44 52,44 75,126 98,44 146,44" fill="none" stroke="url(#g1)" stroke-width="3"/>
+    <polyline points="52,44 75,8 98,44" fill="none" stroke="url(#g1)" stroke-width="3"/>
+  </svg>
+  <div id="pname" class="ui hide">Приз: Скин-заглушка</div>
+  <div id="wincard" class="ui hide"><div class="k">ПОБЕДИТЕЛЬ</div><div class="v" id="wName"></div></div>
+  <button id="fair" class="ui hide"><i>✓</i>Честно · Подробнее</button>
+
+  <div id="hint" class="ui">1 нажатие = 1 участие</div>
+  <button id="btn" class="ui">Греть</button>
+  <div id="err" class="ui"></div>
+
+  <div id="modal">
+    <div id="card">
+      <h2>Проверка честности</h2>
+      <div class="ex">Приз и секретный ключ зашифрованы в хэш до старта таймера — изменить их нельзя. После разлома ключ открыт: проверь сам.</div>
+      <div class="k">ХЭШ ДО СТАРТА · SHA-256 (ПРИЗ + КЛЮЧ) <button id="copy">Скопировать</button></div>
+      <div class="v mono" id="mCommit"></div>
+      <div id="mBefore" class="muted" style="margin-top:22px">🔑 Ключ откроется, когда скорлупа треснет.</div>
+      <div id="mAfter">
+        <div class="k">КЛЮЧ (ОТКРЫТ ПОСЛЕ РАЗЛОМА)</div><div class="v mono" id="mKey"></div>
+        <div class="k">ПЕРЕСЧЁТ SHA-256 (ПРИЗ + КЛЮЧ) В БРАУЗЕРЕ</div><div class="v mono" id="mCalc"></div>
+        <div id="mCheck"><svg width="40" height="40" viewBox="0 0 44 44"><circle cx="22" cy="22" r="20"/>
+          <path d="M12 23 l7 7 l13 -15" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" pathLength="1"/></svg>
+          <span id="mCheckTxt">Совпадает с хэшем до старта</span></div>
+        <div class="k">КАК ВЫБРАН ПОБЕДИТЕЛЬ</div><div class="v mono" id="mForm"></div>
+        <span id="list">Список участников (заглушка) →</span>
+      </div>
+      <button id="close">Закрыть</button>
+    </div>
+  </div>
+
+  <div id="badge" class="ui">ДЕМО-ПРОТОТИП</div>
+  <div id="startov"><div>▶ Начать демо</div></div>
+  <div id="guides"><i style="left:190px;top:0;bottom:0;border-left-width:2px"></i><i style="left:890px;top:0;bottom:0;border-left-width:2px"></i>
+    <i style="top:154px;left:0;right:0;border-top-width:2px"></i><i style="top:1574px;left:0;right:0;border-top-width:2px"></i>
+    <i style="top:326px;left:0;right:0;border-top-width:1px;border-color:#f0f"></i><i style="top:1440px;left:0;right:0;border-top-width:1px;border-color:#f0f"></i></div>
+</div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const stage = $('#stage'), scene = $('#scene'), layers = [...document.querySelectorAll('.layer')];
+  const PRIZE = 'Скин-заглушка';
+  const PLAYERS = ['Котик228','Охотник','Няша_77','Гром','Лиса','Бублик','Вихрь_9','Луна','Орешек','Жар-птица','Кирпич','Сова'];
+
+  const fit = () => { const s = Math.min(innerWidth/1080, innerHeight/1920); stage.style.transform = `translate(-50%,-50%) scale(${s})`; };
+  addEventListener('resize', fit); fit();
+  addEventListener('keydown', e => { if ('gGпП'.includes(e.key)) $('#guides').classList.toggle('on'); if (e.key === 'Escape') closeModal(); });
+
+  /* ---------- крипто ---------- */
+  const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
+  async function sha256(s){
+    if (!(window.crypto && crypto.subtle)) throw new Error('Web Crypto недоступен в этом браузере');
+    return hex(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)));
+  }
+  const two = h => h.slice(0, 32) + '<br>' + h.slice(32);
+
+  /* ---------- звук ---------- */
+  let ac, out, nb;
+  function initAudio(){
+    if (ac) { ac.resume(); return; }
+    try {
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+      const comp = ac.createDynamicsCompressor(); comp.threshold.value = -10; comp.connect(ac.destination);
+      out = ac.createGain(); out.gain.value = .8; out.connect(comp);
+      nb = ac.createBuffer(1, ac.sampleRate, ac.sampleRate); const d = nb.getChannelData(0);
+      for (let i = 0; i < d.length; i++) d[i] = Math.random()*2 - 1;
+    } catch(e) { ac = null; }
+  }
+  function noise(t, type, f, q, dur, vol){
+    const s = ac.createBufferSource(); s.buffer = nb; const fl = ac.createBiquadFilter(); fl.type = type; fl.frequency.value = f; fl.Q.value = q;
+    const g = ac.createGain(); g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + .002); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    s.connect(fl); fl.connect(g); g.connect(out); s.start(t, Math.random()*.5); s.stop(t + dur + .02);
+  }
+  function tone(t, type, f0, f1, dur, vol){
+    const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.setValueAtTime(f0, t);
+    if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur*.8);
+    g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + .004); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + .02);
+  }
+  const now = () => ac.currentTime + .01;
+  const SFX = {
+    tick(hi){ if (!ac) return; const t = now(); tone(t, 'square', hi ? 1760 : 1180, hi ? 1760 : 1180, .05, hi ? .16 : .1); noise(t, 'highpass', 5000, .7, .02, .1); },
+    crack(n, spread, vol){ if (!ac) return; const t = now(); for (let i = 0; i < n; i++) noise(t + Math.random()*spread, 'bandpass', 1200 + Math.random()*4500, 1.5, .015 + Math.random()*.05, vol*(.4 + Math.random()*.6)); },
+    boom(){ if (!ac) return; const t = now(); SFX.crack(50, .5, 1); noise(t, 'lowpass', 900, .7, .8, .8); tone(t, 'sine', 150, 36, .7, 1); },
+    chime(){ if (!ac) return; const t = now(); [[880,.22],[880*2.76,.08],[880*5.4,.04],[1320,.15]].forEach(([f,v],i) => tone(t + (i===3 ? .12 : 0), 'sine', f, f, 2.2 - i*.3, v)); },
+    ding(){ if (!ac) return; const t = now(); tone(t, 'sine', 1047, 1047, .5, .18); tone(t + .12, 'sine', 1568, 1568, .9, .2); },
+    fanfare(){ if (!ac) return; const t = now(); [523,659,784,1047].forEach((f,i) => tone(t + i*.09, 'triangle', f, f, .6, .12)); },
+    warm(){ if (!ac) return; const t = now(); noise(t, 'lowpass', 600, .8, .22, .2); tone(t, 'triangle', 300, 450, .16, .05); },
+    pop(){ if (!ac) return; tone(now(), 'triangle', 880, 1320, .18, .08); },
+    swoosh(){ if (!ac) return; noise(now(), 'lowpass', 1200, .7, .3, .15); }
+  };
+
+  /* ---------- частицы ---------- */
+  const cv = $('#fx'), cx = cv.getContext('2d'); let parts = [], emberRate = .4;
+  function ember(){ parts.push({x: 280 + Math.random()*520, y: 1300 + Math.random()*180, vx: (Math.random()-.5)*20, vy: -40 - Math.random()*80, life: 2 + Math.random()*2.5, age: 0, r: 1.5 + Math.random()*3}); }
+  function burst(n, x, y, sp){ for (let i = 0; i < n; i++){ const a = Math.random()*Math.PI*2, v = sp*(.3 + Math.random());
+    parts.push({x, y, vx: Math.cos(a)*v, vy: Math.sin(a)*v - sp*.2, life: .8 + Math.random()*1.4, age: 0, r: 2 + Math.random()*4, g: 300}); } }
+  function drawParts(dt){
+    cx.clearRect(0, 0, 1080, 1920); cx.globalCompositeOperation = 'lighter';
+    if (Math.random() < emberRate*dt*30) ember();
+    parts = parts.filter(p => (p.age += dt) < p.life);
+    for (const p of parts){
+      p.vy += (p.g || 0)*dt; p.x += p.vx*dt; p.y += p.vy*dt; const a = Math.max(0, 1 - p.age/p.life);
+      const gr = cx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r*3);
+      gr.addColorStop(0, `rgba(255,240,190,${a})`); gr.addColorStop(.4, `rgba(232,179,58,${a*.7})`); gr.addColorStop(1, 'rgba(240,116,42,0)');
+      cx.fillStyle = gr; cx.beginPath(); cx.arc(p.x, p.y, p.r*3, 0, 7); cx.fill();
+    }
+  }
+
+  /* ---------- сцена ---------- */
+  let cur = 6;
+  function show(i, fast){ cur = i; layers.forEach(l => { l.classList.toggle('fast', !!fast); l.classList.toggle('on', +l.dataset.i === i); }); }
+  const hideEl = (sel, h) => document.querySelectorAll(sel).forEach(e => e.classList.toggle('hide', h));
+  function flash(){ $('#flash').animate([{opacity: 0}, {opacity: .8, offset: .12}, {opacity: 0}], {duration: 650, easing: 'ease-out'}); }
+
+  const qT = parseFloat(new URLSearchParams(location.search).get('t'));
+  const T = qT >= 3 && qT <= 3600 ? qT : 10;
+  let phase = 'idle', t0 = 0, lastSec = -1, stg = 0, heaters = 0, key = '', commit = '', timers = [], myNum = 0;
+  let revealed = null;   // {calc, idx, N} после разлома
+  const btn = $('#btn'), hn = $('#hn');
+  const fmt = s => `${String(Math.floor(s/60)).padStart(2, '0')}:${String(Math.floor(s%60)).padStart(2, '0')}`;
+  const later = (ms, f) => timers.push(setTimeout(f, ms));
+  const RUN_UI = '#timer,#heaters,#seal,#hint';
+
+  async function prepare(){
+    const b = new Uint8Array(16); crypto.getRandomValues(b); key = hex(b);
+    commit = await sha256(PRIZE + key);
+    $('#shortHash').textContent = `SHA-256: ${commit.slice(0, 8)}…${commit.slice(-8)}`;
+    $('#mCommit').innerHTML = two(commit);
+    $('#timer').textContent = fmt(T);
+  }
+
+  /* ---------- окно проверки ---------- */
+  function openModal(){
+    const r = revealed;
+    $('#mBefore').style.display = r ? 'none' : '';
+    $('#mAfter').style.display = r ? '' : 'none';
+    $('#mCheck').classList.remove('show');
+    if (r){
+      $('#mKey').textContent = key; $('#mCalc').innerHTML = two(r.calc);
+      const ok = r.calc === commit; $('#mCheck').classList.toggle('bad', !ok);
+      $('#mCheckTxt').textContent = ok ? 'Совпадает с хэшем до старта' : 'Хэш НЕ совпадает!';
+      const dec = parseInt(key.slice(0, 8), 16);
+      $('#mForm').innerHTML = `0x${key.slice(0, 8)} = ${dec}<br>${dec} mod ${r.N} = ${r.idx} → №${r.idx + 1}`;
+      setTimeout(() => { $('#mCheck').classList.add('show'); if (ok) SFX.ding(); }, 350);
+    }
+    $('#modal').classList.add('open'); SFX.swoosh();
+  }
+  function closeModal(){ $('#modal').classList.remove('open'); }
+  $('#seal').addEventListener('click', () => { initAudio(); openModal(); });
+  $('#fair').addEventListener('click', () => { initAudio(); openModal(); });
+  $('#close').addEventListener('click', closeModal);
+  $('#modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+  $('#copy').addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(commit); $('#copy').textContent = 'Скопировано'; }
+    catch(e) { $('#copy').textContent = 'Не удалось'; }
+    setTimeout(() => $('#copy').textContent = 'Скопировать', 1500);
+  });
+
+  async function start(){
+    timers.forEach(clearTimeout); timers = []; closeModal(); revealed = null;
+    $('#gem').classList.remove('show'); hideEl('#pname,#wincard,#fair', true);
+    hideEl(RUN_UI, false); $('#timer').classList.remove('hot');
+    btn.textContent = 'Греть'; btn.classList.remove('green', 'joined'); myNum = 0;
+    $('#hint').textContent = '1 нажатие = 1 участие'; $('#hint').classList.remove('ok');
+    scene.classList.remove('ease'); scene.style.transform = '';
+    await prepare();
+    if (cur !== 1){ show(6); await new Promise(r => setTimeout(r, 350)); show(1); }
+    heaters = 40 + (Math.random()*60|0); hn.textContent = heaters;
+    stg = 1; lastSec = -1; emberRate = .4; t0 = performance.now(); phase = 'run';
+  }
+
+  function setStage(s){
+    if (s === stg) return; stg = s;
+    if (s === 2){ show(2); SFX.crack(10, .3, .6); burst(14, 700, 700, 160); }
+    if (s === 3){ show(3); SFX.crack(22, .4, .8); burst(24, 540, 950, 220); emberRate = 1.4; }
+  }
+
+  async function crack(){
+    phase = 'reveal'; $('#timer').textContent = '00:00';
+    const N = heaters;   // список участников замораживается на нуле
+    flash(); show(4, true); SFX.boom(); burst(140, 540, 990, 650); emberRate = .6;
+    hideEl(RUN_UI, true); hideEl('#btn', true);
+    if ($('#modal').classList.contains('open')) closeModal();
+    scene.style.transform = 'scale(1.07)';
+    const calc = await sha256(PRIZE + key);
+    const idx = parseInt(key.slice(0, 8), 16) % N, me = idx + 1 === myNum;
+    revealed = {calc, idx, N};
+    later(900, () => { scene.classList.add('ease'); show(5); scene.style.transform = 'scale(1)'; });
+    later(1500, () => { $('#gem').classList.add('show'); hideEl('#pname', false); SFX.chime(); burst(60, 540, 840, 300); });
+    later(2500, () => {
+      $('#wName').innerHTML = `№${idx + 1} из ${N} · <span>${me ? 'это ты!' : PLAYERS[idx % PLAYERS.length]}</span>`;
+      hideEl('#wincard', false); SFX.fanfare(); if (me) burst(120, 540, 1170, 500);
+    });
+    later(3300, () => { hideEl('#fair', false); SFX.pop(); });
+    later(4000, () => { btn.textContent = 'Повторить'; btn.classList.add('green'); hideEl('#btn', false); phase = 'done'; });
+  }
+
+  let lf = performance.now();
+  function frame(n){
+    const dt = Math.min(.1, (n - lf)/1000); lf = n;
+    if (phase === 'run'){
+      const el = (n - t0)/1000, p = Math.min(1, el/T), rem = Math.max(0, T - el), sec = Math.ceil(rem);
+      $('#timer').textContent = fmt(sec);
+      if (sec !== lastSec){ if (lastSec !== -1 && sec > 0) SFX.tick(sec <= 3); lastSec = sec; $('#timer').classList.toggle('hot', sec <= 3); }
+      setStage(p >= .66 ? 3 : p >= .33 ? 2 : 1);
+      let dx = 0, dy = 0;
+      if (stg === 3){ const a = 2 + 12*(p - .66)/.34; dx = (Math.random()-.5)*a; dy = (Math.random()-.5)*a;
+        if (Math.random() < dt*(4 + 10*p)) SFX.crack(2, .05, .35); }
+      scene.style.transform = `translate(${dx}px,${dy}px) scale(${1 + .04*p})`;
+      if (Math.random() < dt*(2 + 6*p)){ heaters += 1 + (Math.random()*3|0); hn.textContent = heaters; }
+      if (el >= T) crack();
+    }
+    drawParts(dt);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+
+  function plusOne(){
+    const el = document.createElement('div'); el.id = 'plus'; el.textContent = '+1';
+    el.style.left = '770px'; el.style.top = '720px'; stage.appendChild(el);
+    el.animate([{transform: 'translateY(0)', opacity: 1}, {transform: 'translateY(-90px)', opacity: 0}], {duration: 800}).onfinish = () => el.remove();
+  }
+  btn.addEventListener('click', () => {
+    initAudio();
+    if (phase === 'run' && !myNum){   // «Греть» = участвовать, один раз
+      heaters++; myNum = heaters; hn.textContent = heaters; SFX.warm(); burst(16, 540, 1420, 260); plusOne();
+      btn.classList.add('joined'); btn.innerHTML = `<i>✓</i>Ты греешь · №${myNum}`;
+      $('#hint').textContent = 'Ты в списке участников'; $('#hint').classList.add('ok');
+    } else if (phase === 'run'){ burst(6, 540, 1420, 200); }   // повторные нажатия — только искры
+    else if (phase === 'done') start().catch(e => $('#err').textContent = e.message);
+  });
+  $('#startov').addEventListener('click', () => {
+    initAudio(); $('#startov').remove();
+    start().catch(e => { $('#err').textContent = e.message; });
+  });
+  prepare().then(() => setTimeout(() => show(1), 400)).catch(e => { $('#err').textContent = e.message; });
+})();
+</script>
+</body>
+</html>
